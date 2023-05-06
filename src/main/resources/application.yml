@@ -1,0 +1,59 @@
+server:
+  port: 8082 #服务端口
+  servlet:
+    context-path: /
+spring:
+  application:
+    name: api-gateway #指定服务名
+    gateway:
+      discovery:
+        locator:
+          enabled: true #开启Eureka服务发现
+          lower-case-service-id: true #服务名称忽略大小写
+  cloud:
+    gateway:
+      enabled: true
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: after_route
+          uri: https://www.baidu.com
+          predicates:
+            - After=2027-01-20T17:42:47.789-07:00[America/Denver]
+        - id: before_route
+          uri: https://cn.bing.com
+          predicates:
+            - Before=2021-01-20T17:42:47.789-07:00[America/Denver]
+        - id: between_route
+          uri: https://example.org
+          predicates:
+            - Between=2017-01-20T17:42:47.789-07:00[America/Denver], 2018-01-21T17:42:47.789-07:00[America/Denver]
+        - id: path_route_user
+          uri: lb://EUREKAUSER
+          predicates:
+            - Path=/api-user/**
+          filters:
+            - StripPrefix=1
+        - id: path_route_messager
+          uri: lb://EUREKAROUTER
+          predicates:
+            - Path=/api-router/**
+          filters:
+            - StripPrefix=1
+        - id: path_redirect_to
+          uri: http://www.baidu.com
+          predicates:
+            - Path=/rediect/data
+          filters:
+            - RedirectTo=302,http://www.bing.com
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka.com:8761/eureka/,http://eureka-cluster.com:8762/eureka/
+      registry-fetch-interval-seconds: 5 # 获取服务列表的周期：5s，默认30s
+  instance:
+    instance-id: "${spring.application.name}:${server.port}"
+    prefer-ip-address: true
